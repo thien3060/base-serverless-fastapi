@@ -1,0 +1,26 @@
+app: serverless-fastapi
+service: serverless-fastapi
+package:
+  individually: true
+provider:
+  name: aws
+  runtime: python3.9
+  region: ap-southeast-1
+  profile: default
+  httpApi:
+    cors: true
+  timeout: 10
+  memorySize: 128
+plugins:
+  - serverless-python-requirements
+  - serverless-offline
+functions:
+  app:
+    handler: main.handler
+    events:
+      - httpApi:
+          method: any
+          path: /{proxy+}
+custom:
+  pythonRequirements:
+    useDownloadCache: false
