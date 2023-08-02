@@ -1,27 +1,26 @@
-import json
 import logging
 import uuid
-from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
 from app.models.user import User
+from app.schemas.user import UserResponse, UserUpdateRequest, UserCreateRequest, UserGetRequest, UserDeleteRequest
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/user")
 
 
 @router.get("")
-async def list_user() -> Any:
+async def list_user() -> list[UserResponse]:
     results = User.scan()
     return [dict(result) for result in results]
 
 
 @router.get("/get")
-async def get_user(user_id) -> Any:
+async def get_user(request: UserGetRequest) -> UserResponse:
     try:
-        user = User.get(hash_key=user_id)
+        user = User.get(hash_key=request.user_id)
     except DoesNotExist:
         raise HTTPException(status_code=400, detail="User not found")
 
@@ -29,30 +28,30 @@ async def get_user(user_id) -> Any:
 
 
 @router.post("/create")
-async def create_user(user_name: str) -> Any:
-    user = User(user_id=str(uuid.uuid1()), user_name=user_name)
+async def create_user(request: UserCreateRequest) -> UserResponse:
+    user = User(user_id=str(uuid.uuid1()), user_name=request.user_name)
     user.save()
 
     return dict(user)
 
 
 @router.put("/update")
-async def update_user(user_id: str, user_name: str) -> Any:
+async def update_user(request: UserUpdateRequest) -> UserResponse:
     try:
-        user = User.get(hash_key=user_id)
+        user = User.get(hash_key=request.user_id)
     except DoesNotExist:
         raise HTTPException(status_code=400, detail="User not found")
 
-    user.user_name = user_name
+    user.user_name = request.user_name
     user.save()
 
     return dict(user)
 
 
-@router.delete("/delete")
-async def create_user(user_id: str) -> Any:
+@router.delete("/delete", status_code=204)
+async def delete_user(request: UserDeleteRequest) -> None:
     try:
-        user = User.get(hash_key=user_id)
+        user = User.get(hash_key=request.user_id)
     except DoesNotExist:
         raise HTTPException(status_code=400, detail="User not found")
     try:
@@ -60,4 +59,4 @@ async def create_user(user_id: str) -> Any:
     except DeleteError:
         raise HTTPException(status_code=400, detail="Unable to delete user")
 
-    return {'statusCode': 204}
+    return None
