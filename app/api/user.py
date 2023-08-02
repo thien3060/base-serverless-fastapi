@@ -1,7 +1,7 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pynamodb.exceptions import DoesNotExist, DeleteError
 
 from app.models.user import User
@@ -18,7 +18,7 @@ async def list_user() -> list[UserResponse]:
 
 
 @router.get("/get")
-async def get_user(request: UserGetRequest) -> UserResponse:
+async def get_user(request: UserGetRequest = Depends(UserGetRequest)) -> UserResponse:
     try:
         user = User.get(hash_key=request.user_id)
     except DoesNotExist:

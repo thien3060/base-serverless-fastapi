@@ -39,6 +39,7 @@ provider:
           Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-*"
 plugins:
   - serverless-python-requirements
+  - serverless-domain-manager
   - serverless-dynamodb
   - serverless-offline
 functions:
@@ -51,6 +52,9 @@ functions:
 custom:
   pythonRequirements:
     useDownloadCache: false
+  domains:
+    dev: serverless-dev.iomics.io
+    prod: serverless.iomics.io
   serverless-dynamodb:
     stages:
       - dev
@@ -61,7 +65,17 @@ custom:
       migrate: true
       seed: true
       convertEmptyValues: true
-
+  customDomains:
+    domainName: ${self:custom.domains.${opt:stage, 'dev'}}
+    certificateName: '*.iomics.io'
+    certificateArn: arn:aws:acm:ap-southeast-1:256056681342:certificate/f016f807-12ef-4b31-9394-1a88f7eacb3d
+    createRoute53Record: true
+    createRoute53IPv6Record: false
+    hostedZoneId: Z100546838WFA8JTUWL7I
+    endpointType: 'regional'
+    securityPolicy: tls_1_2
+    apiType: http
+    autoDomain: false
 resources:
   Resources:
     UsersDynamoDbTable:

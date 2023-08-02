@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "serverless": "^3.33.0",
+    "serverless-domain-manager": "^7.1.1",
     "serverless-dynamodb": "^0.2.42"
   }
 }
