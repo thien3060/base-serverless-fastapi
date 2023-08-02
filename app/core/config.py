@@ -10,5 +10,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = ["http://localhost:3000"]
     AWS_DEFAULT_REGION: str = "ap-southeast-1"
 
+    DYNAMODB_REGION: str = "ap-southeast-1"
+    USER_DYNAMODB_TABLE: str = "USER_DYNAMODB_TABLE"
+
 
 settings = Settings()

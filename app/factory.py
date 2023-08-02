@@ -12,7 +12,6 @@ def create_app():
         title=settings.PROJECT_NAME,
         openapi_url=f"{settings.API_PATH}/openapi.json",
         description=description,
-        redoc_url=None,
     )
     setup_routers(app)
     setup_cors_middleware(app)

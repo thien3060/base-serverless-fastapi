@@ -1,18 +1,45 @@
 app: serverless-fastapi
 service: serverless-fastapi
+frameworkVersion: "3"
 package:
   individually: true
+  exclude:
+    - node_modules/**
+    - .idea/**
+    - .env*
+    - README.md
+    - package.json
+    - package-lock.json
+    - requirements.txt
 provider:
   name: aws
   runtime: python3.9
   region: ap-southeast-1
   profile: default
+  stage: ${opt:stage, 'dev'}
+  environment:
+    DYNAMODB_REGION: ap-southeast-1
+    USER_DYNAMODB_TABLE: ${self:service}-users-${opt:stage, self:provider.stage}
   httpApi:
     cors: true
   timeout: 10
   memorySize: 128
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:DescribeTable
+          Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-*"
 plugins:
   - serverless-python-requirements
+  - serverless-dynamodb
   - serverless-offline
 functions:
   app:
@@ -24,3 +51,30 @@ functions:
 custom:
   pythonRequirements:
     useDownloadCache: false
+  serverless-dynamodb:
+    stages:
+      - dev
+    start:
+      docker: true
+      port: 8800
+      inMemory: true
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+
+resources:
+  Resources:
+    UsersDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete # May change this to 'Retain' later
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: user_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.USER_DYNAMODB_TABLE}
